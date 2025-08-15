@@ -6,56 +6,79 @@
   <style>
     body {
       text-align: center;
-      font-family: Arial, sans-serif;
-      margin-top: 50px;
+      font-family: 'Minion Pro', Georgia, 'Times New Roman', Times, serif;
       background-color: #B71F2E;
       color: white;
+      padding: 30px;
     }
+
     h1 {
       color: #FCC40B;
       font-size: 48px;
-      margin-bottom: 20px;
+      margin-bottom: 40px;
     }
-    button {
-      font-size: 18px;
-      padding: 10px 20px;
-      margin: 10px;
+
+    #roll-button {
+      font-size: 28px;
+      padding: 20px 40px;
+      margin-bottom: 30px;
       cursor: pointer;
     }
+
     .dice {
       width: 100px;
       margin: 10px;
+      filter: grayscale(100%);
     }
+
+    #dice-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
     #result, #special-message {
       font-size: 24px;
       margin-top: 20px;
     }
+
     #special-message {
       font-weight: bold;
       color: #FCC40B;
     }
+
     #tally {
-      margin-top: 30px;
+      margin-top: 50px;
       font-size: 18px;
       color: white;
     }
+
     table {
       margin: 0 auto;
       border-collapse: collapse;
       background-color: white;
       color: black;
     }
+
     th, td {
       border: 1px solid #333;
       padding: 5px 10px;
+    }
+
+    #reset-button {
+      margin-top: 20px;
+      font-size: 16px;
+      padding: 10px 20px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
   <h1>Cataniac Roller</h1>
-  <button onclick="rollDice()">Roll</button>
-  <button onclick="resetTally()">Reset Tally</button>
+
+  <button id="roll-button" onclick="rollDice()">🎲 Roll the Dice</button>
 
   <div id="dice-container">
     <img id="die1" class="dice" src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Dice-1-b.svg" alt="Die 1">
@@ -75,16 +98,17 @@
         </tr>
       </thead>
       <tbody id="tally-body">
-        <!-- Populated by JS -->
+        <!-- JS will populate -->
       </tbody>
     </table>
+
+    <button id="reset-button" onclick="resetTally()">🔄 Reset Tally</button>
   </div>
 
   <script>
     let tally = {};
     let rollHistory = [];
 
-    // Initialize tally for each possible roll (2–12)
     for (let i = 2; i <= 12; i++) {
       tally[i] = 0;
     }
@@ -94,20 +118,16 @@
       const die2 = Math.floor(Math.random() * 6) + 1;
       const sum = die1 + die2;
 
-      // Add this roll to history
       rollHistory.push(sum);
-      if (rollHistory.length > 100) rollHistory.shift(); // limit to last 100 for performance
+      if (rollHistory.length > 100) rollHistory.shift();
 
-      // Update dice images
       document.getElementById("die1").src = `https://upload.wikimedia.org/wikipedia/commons/${getDiePath(die1)}`;
       document.getElementById("die2").src = `https://upload.wikimedia.org/wikipedia/commons/${getDiePath(die2)}`;
 
-      // Update result
       document.getElementById("result").innerText = `You rolled a ${die1} and a ${die2} (Total: ${sum})`;
 
-      // Update special message
       const msg = document.getElementById("special-message");
-      msg.innerText = ""; // clear message
+      msg.innerText = "";
 
       if (sum === 7) {
         msg.innerText = "COUNT YOUR CARDS!!!";
@@ -123,7 +143,6 @@
         msg.innerText = "Finally!";
       }
 
-      // Update tally
       tally[sum]++;
       updateTallyTable();
     }
@@ -134,7 +153,7 @@
           return rollHistory.length - 1 - i;
         }
       }
-      return rollHistory.length; // never rolled
+      return rollHistory.length;
     }
 
     function updateTallyTable() {
@@ -169,7 +188,6 @@
       return paths[num];
     }
 
-    // Initialize table
     updateTallyTable();
   </script>
 
