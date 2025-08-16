@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cataniac Roller</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: 'Minion Pro', Georgia, 'Times New Roman', Times, serif;
+      background-color: #B71F2E;
+      color: white;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #FCC40B;
+      font-size: 48px;
+      margin-bottom: 40px;
+    }
+
+    #roll-button {
+      font-size: 28px;
+      padding: 20px 40px;
+      margin-bottom: 30px;
+      cursor: pointer;
+      background-color: transparent;
+      border: none;
+      color: #FCC40B;
+    }
+
+    #dice-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .dice {
+      width: 100px;
+      height: 100px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      padding: 10px;
+    }
+
+    #total {
+      font-size: 32px;
+      margin-top: 25px;
+      font-weight: bold;
+    }
+
+    #special-message {
+      font-size: 24px;
+      font-weight: bold;
+      color: #FCC40B;
+      margin-top: 15px;
+    }
+
+    #tally {
+      margin-top: 50px;
+      font-size: 18px;
+      color: #FCC40B;
+    }
+
+    #tally table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      color: #FCC40B;
+    }
+
+    #tally th, #tally td {
+      border: none;
+      padding: 4px;
+    }
+
+    #reset-button {
+      margin-top: 20px;
+      font-size: 16px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .small-btn {
+      display: block;
+      width: 60px;
+      height: 60px;
+      font-size: 36px;
+      background-color: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #FCC40B;
+      cursor: pointer;
+    }
+
+    .small-btn.active {
+      background-color: #666;
+      color: white;
+    }
+
+    #settlement-tracker {
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #B71F2E;
+      color: #FCC40B;
+    }
+
+    #settlement-tracker table {
+      background-color: #B71F2E;
+      margin: 0 auto; /* Centers the table */
+    }
+
+    #settlement-tracker th,
+    #settlement-tracker td {
+      border: none;
+      padding: 6px;
+    }
+
+    #settlement-tracker td:first-child {
+      font-size: 22px;
+      font-weight: bold;
+      color: #FCC40B;
+    }
+
+    #points-section {
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    #points-section h3 {
+      margin: 0;
+      font-size: 24px;
+      color: #FCC40B;
+    }
+
+    #points-display {
+      font-weight: bold;
+      font-size: 28px;
+    }
+
+    #add-point-button {
+      font-size: 32px;
+      padding: 0px 14px;
+      background-color: transparent;
+      border: none;
+      color: #FCC40B;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Cataniac Roller</h1>
+
+  <button id="roll-button" onclick="rollDice()">🎲 Roll the Dice</button>
+
+  <div id="dice-container">
+    <img id="die1" class="dice" src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Dice-1-b.svg" alt="Die 1">
+    <img id="die2" class="dice" src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Dice-1-b.svg" alt="Die 2">
+  </div>
+
+  <p id="total">Total: --</p>
+  <p id="special-message"></p>
+
+  <div id="tally">
+    <table>
+      <thead>
+        <tr>
+          <th>Roll</th>
+          <th>Count</th>
+        </tr>
+      </thead>
+      <tbody id="tally-body"></tbody>
+    </table>
+    <button id="reset-button" onclick="resetTally()">🔄 Reset Tally</button>
+  </div>
+
+  <div id="settlement-tracker">
+    <div id="points-section">
+      <h3>My points: <span id="points-display">0</span></h3>
+      <button id="add-point-button" onclick="addPoint()">+</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Roll</th>
+          <th>🧱</th>
+          <th>🌲</th>
+          <th>🐑</th>
+          <th>🌾</th>
+          <th>🪨</th>
+        </tr>
+      </thead>
+      <tbody id="settlement-body"></tbody>
+    </table>
+
+    <button onclick="resetPointsAndResources()" style="margin-top: 20px; font-size: 16px; padding: 10px 20px; cursor: pointer;">
+      🔄 Reset Points and Resources
+    </button>
+  </div>
+
+  <script>
+    let tally = {};
+    let rollHistory = [];
+    let myPoints = 0;
+
+    for (let i = 2; i <= 12; i++) tally[i] = 0;
+
+    function getDiePath(num) {
+      const paths = {
+        1: "1/1b/Dice-1-b.svg",
+        2: "5/5f/Dice-2-b.svg",
+        3: "b/b1/Dice-3-b.svg",
+        4: "f/fd/Dice-4-b.svg",
+        5: "0/08/Dice-5-b.svg",
+        6: "2/26/Dice-6-b.svg"
+      };
+      return paths[num];
+    }
+
+    function updateTallyTable() {
+      const tbody = document.getElementById("tally-body");
+      tbody.innerHTML = "";
+      for (let i = 2; i <= 12; i++) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${i}</td><td>${tally[i]}</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    function rollsSince(target) {
+      for (let i = rollHistory.length - 2; i >= 0; i--) {
+        if (rollHistory[i] === target) {
+          return rollHistory.length - 1 - i;
+        }
+      }
+      return rollHistory.length;
+    }
+
+    function resetTally() {
+      for (let i = 2; i <= 12; i++) tally[i] = 0;
+      rollHistory = [];
+      document.getElementById("special-message").innerText = "";
+      document.getElementById("total").innerText = "Total: --";
+      updateTallyTable();
+    }
+
+    function rollDice() {
+      const die1El = document.getElementById("die1");
+      const die2El = document.getElementById("die2");
+      const totalEl = document.getElementById("total");
+      const msgEl = document.getElementById("special-message");
+
+      msgEl.innerText = "";
+      totalEl.innerText = "Rolling...";
+
+      let startTime = Date.now();
+      let rollInterval = setInterval(() => {
+        const temp1 = Math.floor(Math.random() * 6) + 1;
+        const temp2 = Math.floor(Math.random() * 6) + 1;
+        die1El.src = `https://upload.wikimedia.org/wikipedia/commons/${getDiePath(temp1)}`;
+        die2El.src = `https://upload.wikimedia.org/wikipedia/commons/${getDiePath(temp2)}`;
+
+        if (Date.now() - startTime >= 1000) {
+          clearInterval(rollInterval);
+          const final1 = Math.floor(Math.random() * 6) + 1;
+          const final2 = Math.floor(Math.random() * 6) + 1;
+          const sum = final1 + final2;
+
+          die1El.src = `https://upload.wikimedia.org/wikipedia/commons/${getDiePath(final1)}`;
+          die2El.src = `https://upload.wikimedia.org/wikipedia/commons/${getDiePath(final2)}`;
+          totalEl.innerText = `Total: ${sum}`;
+
+          rollHistory.push(sum);
+          if (rollHistory.length > 100) rollHistory.shift();
+
+          if (sum === 7) msgEl.innerText = "COUNT YOUR CARDS!!!";
+          else if (sum === 10) msgEl.innerText = "Ryan doesn't invest in 10s";
+          else if (sum === 2) msgEl.innerText = "Are there even any 2s?";
+          else if (sum === 12) msgEl.innerText = "Are there even any 12s?";
+          else if (sum === 8 && rollsSince(8) >= 8) msgEl.innerText = "Finally!";
+          else if (sum === 6 && rollsSince(6) >= 8) msgEl.innerText = "Finally!";
+
+          tally[sum]++;
+          updateTallyTable();
+        }
+      }, 100);
+    }
+
+    function addPoint() {
+      if (myPoints < 20) {
+        myPoints++;
+        document.getElementById("points-display").innerText = myPoints;
+      }
+    }
+
+    const rolls = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12];
+    const resources = ['brick', 'wood', 'sheep', 'wheat', 'rock'];
+    const icons = {
+      brick: '🧱',
+      wood: '🌲',
+      sheep: '🐑',
+      wheat: '🌾',
+      rock: '🪨'
+    };
+
+    function createSettlementTable() {
+      const tbody = document.getElementById("settlement-body");
+      tbody.innerHTML = '';
+      rolls.forEach(roll => {
+        const tr = document.createElement("tr");
+        const tdNum = document.createElement("td");
+        tdNum.textContent = roll;
+        tr.appendChild(tdNum);
+
+        resources.forEach(resource => {
+          const td = document.createElement("td");
+          const btn = document.createElement("button");
+          btn.className = "small-btn";
+          btn.textContent = icons[resource];
+
+          const key = `settle-${roll}-${resource}`;
+          if (localStorage.getItem(key) === '1') btn.classList.add("active");
+
+          btn.addEventListener("click", () => {
+            btn.classList.toggle("active");
+            if (btn.classList.contains("active")) {
+              localStorage.setItem(key, '1');
+            } else {
+              localStorage.removeItem(key);
+            }
+          });
+
+          td.appendChild(btn);
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function resetSettlementTracker() {
+      rolls.forEach(roll => {
+        resources.forEach(resource => {
+          const key = `settle-${roll}-${resource}`;
+          localStorage.removeItem(key);
+        });
+      });
+      createSettlementTable();
+    }
+
+    function resetPointsAndResources() {
+      myPoints = 0;
+      document.getElementById("points-display").innerText = myPoints;
+      resetSettlementTracker();
+    }
+
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        rollDice();
+      }
+    });
+
+    updateTallyTable();
+    createSettlementTable();
+  </script>
+</body>
+</html>
